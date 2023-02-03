@@ -27,26 +27,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Runs when client connects
 // This function will send a message from the server to the frontend
 io.on('connection', (socket) => {
-  // Welcomes current user
-  socket.emit('message', formatMessage(Adminmessage, 'Welcome to Discuss'));
+  socket.on('joinRoom', ({ username, room }) => {
+    // Welcomes current user
+    socket.emit('message', formatMessage(Adminmessage, 'Welcome to Discuss'));
 
-  // Broadcast when a user connects
-  // Sends a message to other users except the current  user
-  socket.broadcast.emit(
-    'message',
-    formatMessage(Adminmessage, 'A user has joined the chat')
-  );
+    // Broadcast when a user connects
+    // Sends a message to other users except the current  user
+    socket.broadcast.emit(
+      'message',
+      formatMessage(Adminmessage, 'A user has joined the chat')
+    );
+  });
+
+  // Listen for chatMessage
+  // It listens to an event made from the frontend
+  socket.on('chatMessage', (msg) => {
+    //send messsage to other users
+    io.emit('message', formatMessage('USER', msg));
+  });
 
   // Runs when a client disconnects
   socket.on('disconnect', () => {
     io.emit('message', formatMessage(Adminmessage, 'A user has left the chat'));
-  });
-
-  // Listen for chatMessage
-  // It listends to an event made from the frontend
-  socket.on('chatMessage', (msg) => {
-    //send messsage to other users
-    io.emit('message', formatMessage('USER', msg));
   });
 });
 
