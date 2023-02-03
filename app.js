@@ -4,6 +4,7 @@ const path = require('path');
 const http = require('http');
 const bodyParser = require('body-parser');
 const socketio = require('socket.io');
+const formatMessage = require('./utils/messages');
 
 //ROUTES
 const indexRouter = require('./routes/index');
@@ -18,28 +19,34 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
+const Adminmessage = 'Admin';
+
 // SET STATIC FOLDER
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Runs when client connects
+// This function will send a message from the server to the frontend
 io.on('connection', (socket) => {
-  console.log('New connection ...');
-
   // Welcomes current user
-  socket.emit('message', 'Welcome to Discuss');
+  socket.emit('message', formatMessage(Adminmessage, 'Welcome to Discuss'));
 
   // Broadcast when a user connects
   // Sends a message to other users except the current  user
-  socket.broadcast.emit('message', 'A user has joined the chat');
+  socket.broadcast.emit(
+    'message',
+    formatMessage(Adminmessage, 'A user has joined the chat')
+  );
 
   // Runs when a client disconnects
   socket.on('disconnect', () => {
-    io.emit('message', 'A user has left the chat');
+    io.emit('message', formatMessage(Adminmessage, 'A user has left the chat'));
   });
 
-  // Listen to chatMessage
+  // Listen for chatMessage
+  // It listends to an event made from the frontend
   socket.on('chatMessage', (msg) => {
-    io.emit('message', msg);
+    //send messsage to other users
+    io.emit('message', formatMessage('USER', msg));
   });
 });
 
